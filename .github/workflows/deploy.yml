@@ -34,9 +34,7 @@ jobs:
           tags: gbrhhenri/grupo06-frontend:latest
 
       - name: Dispara webhook app no Portainer
-        run: |
-          curl -X POST ${{ secrets.PORTAINER_WEBHOOK_APP }}
+        run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_APP }}
 
       - name: Dispara webhook frontend no Portainer
-        run: |
-          curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
+        run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
