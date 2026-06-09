@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout do código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login no Docker Hub
         uses: docker/login-action@v3
@@ -22,14 +22,14 @@ jobs:
       - name: Build e Push da imagem da API
         uses: docker/build-push-action@v5
         with:
-          context: ./app
+          context: ./estoque/app
           push: true
           tags: gbrhhenri/grupo06-app:latest
 
       - name: Build e Push da imagem do Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./estoque/frontend
           push: true
           tags: gbrhhenri/grupo06-frontend:latest
 
@@ -40,5 +40,5 @@ jobs:
           username: grupo06
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker service update --image gbrhhenri/grupo06-app:latest grupo06-swarm-stack_app
-            docker service update --image gbrhhenri/grupo06-frontend:latest grupo06-swarm-stack_frontend
+            docker service update --image gbrhhenri/grupo06-app:latest grupo06-swarm-stack_app --with-registry-auth
+            docker service update --image gbrhhenri/grupo06-frontend:latest grupo06-swarm-stack_frontend --with-registry-auth
