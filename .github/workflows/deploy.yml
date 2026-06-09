@@ -33,12 +33,10 @@ jobs:
           push: true
           tags: gbrhhenri/grupo06-frontend:latest
 
-      - name: Atualiza serviços no Swarm via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 177.86.167.218
-          username: grupo06
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            docker service update --image gbrhhenri/grupo06-app:latest grupo06-swarm-stack_app --with-registry-auth
-            docker service update --image gbrhhenri/grupo06-frontend:latest grupo06-swarm-stack_frontend --with-registry-auth
+      - name: Dispara webhook app no Portainer
+        run: |
+          curl -X POST ${{ secrets.PORTAINER_WEBHOOK_APP }}
+
+      - name: Dispara webhook frontend no Portainer
+        run: |
+          curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
