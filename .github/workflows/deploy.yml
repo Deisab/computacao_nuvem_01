@@ -36,7 +36,7 @@ jobs:
       - name: Atualiza serviços no Swarm via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 100.113.206.49
+          host: 177.86.167.218
           username: grupo06
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
