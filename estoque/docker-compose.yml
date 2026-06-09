@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  app:
+    image: gbrhhenri/grupo06-app:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=192.168.48.62
+      - DB_NAME=restaurante
+      - DB_USER=admin
+      - DB_PASSWORD=gabriel10
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    networks:
+      - grupo06-network
+
+  frontend:
+    image: gbrhhenri/grupo06-frontend:latest
+    ports:
+      - "3000:80"
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    networks:
+      - grupo06-network
+
+networks:
+  grupo06-network:
+    driver: overlay

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ERP Restaurante - Estoque</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; }
+    header { background: #2c3e50; color: white; padding: 16px 24px; }
+    header h1 { font-size: 1.4rem; }
+    header p { font-size: 0.85rem; opacity: 0.7; margin-top: 2px; }
+    .container { max-width: 900px; margin: 24px auto; padding: 0 16px; }
+    .card { background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .card h2 { font-size: 1rem; margin-bottom: 16px; color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 8px; }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-row input { flex: 1; min-width: 150px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; }
+    .btn { padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    .btn-primary { background: #2c3e50; color: white; }
+    .btn-primary:hover { background: #1a252f; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-warning:hover { background: #d68910; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th { background: #2c3e50; color: white; padding: 10px 12px; text-align: left; }
+    td { padding: 10px 12px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #f9f9f9; }
+    .actions { display: flex; gap: 6px; }
+    .msg { padding: 10px 14px; border-radius: 4px; margin-bottom: 12px; font-size: 0.9rem; display: none; }
+    .msg.success { background: #d4edda; color: #155724; display: block; }
+    .msg.error { background: #f8d7da; color: #721c24; display: block; }
+    .empty { text-align: center; color: #999; padding: 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🍽️ ERP Restaurante</h1>
+  <p>Gestão de Insumos</p>
+</header>
+
+<div class="container">
+
+  <div id="msg" class="msg"></div>
+
+  <div class="card">
+    <h2>Adicionar Insumo</h2>
+    <div class="form-row">
+      <input type="text" id="produto" placeholder="Nome do produto (ex: Arroz 5kg)" />
+      <input type="number" id="qtd" placeholder="Quantidade" min="0" />
+      <button class="btn btn-primary" onclick="adicionarInsumo()">Adicionar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Estoque Atual</h2>
+    <table id="tabela">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Produto</th>
+          <th>Quantidade</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Modal edição -->
+<div id="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; align-items:center; justify-content:center;">
+  <div style="background:white; border-radius:8px; padding:24px; width:320px;">
+    <h3 style="margin-bottom:16px; color:#2c3e50;">Editar Insumo</h3>
+    <input type="hidden" id="edit-id" />
+    <input type="text" id="edit-produto" placeholder="Produto" style="width:100%; padding:8px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;" />
+    <input type="number" id="edit-qtd" placeholder="Quantidade" style="width:100%; padding:8px; margin-bottom:16px; border:1px solid #ccc; border-radius:4px;" />
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn" onclick="fecharModal()" style="background:#ccc;">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'http://192.168.48.61:8000';
+
+  function showMsg(texto, tipo) {
+    const el = document.getElementById('msg');
+    el.textContent = texto;
+    el.className = 'msg ' + tipo;
+    setTimeout(() => el.className = 'msg', 3000);
+  }
+
+  async function carregarEstoque() {
+    try {
+      const res = await fetch(API + '/estoque');
+      const dados = await res.json();
+      const tbody = document.getElementById('tbody');
+      if (dados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhum insumo cadastrado.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = dados.map(item => `
+        <tr>
+          <td>${item.id}</td>
+          <td>${item.produto}</td>
+          <td>${item.quantidade}</td>
+          <td class="actions">
+            <button class="btn btn-warning" onclick="abrirModal(${item.id}, '${item.produto}', ${item.quantidade})">Editar</button>
+            <button class="btn btn-danger" onclick="deletarInsumo(${item.id})">Remover</button>
+          </td>
+        </tr>
+      `).join('');
+    } catch (e) {
+      showMsg('Erro ao conectar com a API.', 'error');
+    }
+  }
+
+  async function adicionarInsumo() {
+    const produto = document.getElementById('produto').value.trim();
+    const qtd = parseInt(document.getElementById('qtd').value);
+    if (!produto || isNaN(qtd)) return showMsg('Preencha todos os campos.', 'error');
+    const res = await fetch(API + '/estoque', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ produto, qtd })
+    });
+    if (res.ok) {
+      document.getElementById('produto').value = '';
+      document.getElementById('qtd').value = '';
+      showMsg('Insumo adicionado com sucesso!', 'success');
+      carregarEstoque();
+    } else {
+      showMsg('Erro ao adicionar insumo.', 'error');
+    }
+  }
+
+  async function deletarInsumo(id) {
+    if (!confirm('Remover este insumo?')) return;
+    const res = await fetch(API + '/estoque/' + id, { method: 'DELETE' });
+    if (res.ok) {
+      showMsg('Insumo removido.', 'success');
+      carregarEstoque();
+    } else {
+      showMsg('Erro ao remover.', 'error');
+    }
+  }
+
+  function abrirModal(id, produto, qtd) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-produto').value = produto;
+    document.getElementById('edit-qtd').value = qtd;
+    document.getElementById('modal').style.display = 'flex';
+  }
+
+  function fecharModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
+
+  async function salvarEdicao() {
+    const id = document.getElementById('edit-id').value;
+    const produto = document.getElementById('edit-produto').value.trim();
+    const qtd = parseInt(document.getElementById('edit-qtd').value);
+    if (!produto || isNaN(qtd)) return showMsg('Preencha todos os campos.', 'error');
+    const res = await fetch(API + '/estoque/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ produto, qtd })
+    });
+    if (res.ok) {
+      fecharModal();
+      showMsg('Insumo atualizado!', 'success');
+      carregarEstoque();
+    } else {
+      showMsg('Erro ao atualizar.', 'error');
+    }
+  }
+
+  carregarEstoque();
+</script>
+
+</body>
+</html>

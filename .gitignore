@@ -1,0 +1,13 @@
+.cache/
+.docker/
+.ssh/
+.bash_history
+.bash_logout
+.bashrc
+.profile
+.sudo_as_admin_successful
+.local/
+venv/
+__pycache__/
+*.pyc
+.env
