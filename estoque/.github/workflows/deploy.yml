@@ -9,7 +9,6 @@ jobs:
 build-and-deploy:
 runs-on: ubuntu-latest
 
-```
 steps:
   - name: Checkout do código
     uses: actions/checkout@v4
@@ -40,26 +39,16 @@ steps:
       host: ${{ secrets.SERVER_IP }}
       username: ${{ secrets.SERVER_USER }}
       key: ${{ secrets.SSH_PRIVATE_KEY }}
-
       script: |
-        echo "Atualizando imagens..."
-
         docker pull gbrhhenri/grupo06-app:latest
         docker pull gbrhhenri/grupo06-frontend:latest
 
-        echo "Atualizando App..."
         docker service update \
           --image gbrhhenri/grupo06-app:latest \
           --force \
           grupo06-swarm-stack_app
 
-        echo "Atualizando Frontend..."
         docker service update \
           --image gbrhhenri/grupo06-frontend:latest \
           --force \
           grupo06-swarm-stack_frontend
-
-        echo "Status final:"
-        docker service ls
-```
-
