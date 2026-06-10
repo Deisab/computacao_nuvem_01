@@ -33,8 +33,14 @@ jobs:
           push: true
           tags: gbrhhenri/grupo06-frontend:latest
 
-      - name: Dispara webhook app no Portainer
-        run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_APP }}
-
-      - name: Dispara webhook frontend no Portainer
-        run: curl -X POST ${{ secrets.PORTAINER_WEBHOOK_FRONTEND }}
+      - name: Deploy no Docker Swarm via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull gbrhhenri/grupo06-app:latest
+            docker pull gbrhhenri/grupo06-frontend:latest
+            docker service update --image gbrhhenri/grupo06-app:latest --force grupo06-swarm-stack_app
+            docker service update --image gbrhhenri/grupo06-frontend:latest --force grupo06-swarm-stack_frontend
