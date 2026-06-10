@@ -40,6 +40,7 @@ steps:
       host: ${{ secrets.SERVER_IP }}
       username: ${{ secrets.SERVER_USER }}
       key: ${{ secrets.SSH_PRIVATE_KEY }}
+
       script: |
         echo "Atualizando imagens..."
 
@@ -58,7 +59,7 @@ steps:
           --force \
           grupo06-swarm-stack_frontend
 
-        echo "Verificando status..."
+        echo "Status final:"
         docker service ls
 ```
 
